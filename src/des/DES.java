@@ -19,8 +19,8 @@ public class DES {
     public static void main(String[] args) {
         String key = "133457799BBCDFF1";
        KeyGenerator a = new KeyGenerator(key);
-       a.Key(16);
-       a.Print(16);
+       a.Key(1);
+       //a.Print(16);
     }
     
 }

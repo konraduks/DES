@@ -10,7 +10,7 @@ package KeyGenerator;
  * @author Konrad
  */
 public class KeyGenerator {
-    
+
     String KPlus = "";
 
     private static int PC1[][] = {
@@ -37,62 +37,62 @@ public class KeyGenerator {
     String[] C = new String[17];
     String[] D = new String[17];
 
-    public KeyGenerator(String GivenKey) {        
+    public KeyGenerator(String GivenKey) {
         String tempBinary = "";
         String binary;
         int[] tempInt = new int[16];
         String[][] BinaryKey = new String[8][8];
-        
-        for(int i = 0, x = 0, y = -1; i < 16; i++,  x = x%8){
-            if(x == 0) y++;
-            tempInt[i]= Integer.parseInt(/*temp[i]+""*/GivenKey.charAt(i)+"", 16);            
+
+        for (int i = 0, x = 0, y = -1; i < 16; i++, x = x % 8) {
+            if (x == 0) {
+                y++;
+            }
+            tempInt[i] = Integer.parseInt(/*temp[i]+""*/GivenKey.charAt(i) + "", 16);
             binary = Integer.toBinaryString(tempInt[i]);
-            while(binary.length() != 4){
+            while (binary.length() != 4) {
                 binary = '0' + binary;
-            }    
-            tempBinary += binary;                 
-        }        
-        for(int i = 0; i < 8 ; i++){
-                for(int y = 0; y < 7 ; y++){
-                    KPlus+=tempBinary.charAt(PC1[i][y]-1);
-                }
+            }
+            tempBinary += binary;
         }
-        //System.out.println(KPlus);    
+        for (int i = 0; i < 8; i++) {
+            for (int y = 0; y < 7; y++) {
+                KPlus += tempBinary.charAt(PC1[i][y] - 1);
+            }
+        }          
         C[0] = KPlus.substring(0, 28);
         D[0] = KPlus.substring(28, 56);
     }
 
     public void Key(int NumberOfPermutation) {        
-        //String C0 = KPlus.substring(0, 28);
-        //String D0 = KPlus.substring(28, 56);        
-        //String C1 = C0.substring(NumberOfShifts[1-1], C0.length()) + C0.substring(0, NumberOfShifts[1-1]);
-        //String D1 = D0.substring(NumberOfShifts[1-1], D0.length()) + D0.substring(0, NumberOfShifts[1-1]);
-        if(C[NumberOfPermutation-1] != null){
-            C[NumberOfPermutation] = C[NumberOfPermutation-1].substring(NumberOfShifts[NumberOfPermutation], C[NumberOfPermutation-1].length()) + C[NumberOfPermutation-1].substring(0, NumberOfShifts[NumberOfPermutation]);
-            D[NumberOfPermutation] = D[NumberOfPermutation-1].substring(NumberOfShifts[NumberOfPermutation], D[NumberOfPermutation-1].length()) + D[NumberOfPermutation-1].substring(0, NumberOfShifts[NumberOfPermutation]);
+        generateC(NumberOfPermutation);
+        generateD(NumberOfPermutation);
+        
+        String temp = C[NumberOfPermutation]+D[NumberOfPermutation];
+        String result = "";
+        for (int i = 0; i < 8; i++) {
+            for (int y = 0; y < 6; y++) {
+                result += temp.charAt(PC2[i][y] - 1);
+            }
         }
-        else{
-            Key(NumberOfPermutation-1);
-            Key(NumberOfPermutation);
+        System.out.println(result);
+    }
+
+    private String generateC(int NumberOfPermutation) {
+        if (C[NumberOfPermutation - 1] == null) {
+            generateC(NumberOfPermutation - 1);
         }
-        
-        /*for(int i = 1; i <= NumberOfPermutation; i++){
-            System.out.println(C[i]);
-            System.out.println(D[i]);
-            System.out.println("");
-        }*/
-        
+        return C[NumberOfPermutation] = C[NumberOfPermutation - 1].substring(NumberOfShifts[NumberOfPermutation], C[NumberOfPermutation - 1].length()) + C[NumberOfPermutation - 1].substring(0, NumberOfShifts[NumberOfPermutation]);
     }
-    
-    private void generateC(){
-        
+
+    private String generateD(int NumberOfPermutation) {
+        if (D[NumberOfPermutation - 1] == null) {
+            generateD(NumberOfPermutation - 1);
+        }
+        return D[NumberOfPermutation] = D[NumberOfPermutation - 1].substring(NumberOfShifts[NumberOfPermutation], D[NumberOfPermutation - 1].length()) + D[NumberOfPermutation - 1].substring(0, NumberOfShifts[NumberOfPermutation]);
     }
-    
-    private void generateD(){
-        
-    }
-    public void Print(int NumberOfPermutation){
-        for(int i = 1; i <= NumberOfPermutation; i++){
+
+    public void Print(int NumberOfPermutation) {
+        for (int i = 1; i <= NumberOfPermutation; i++) {
             System.out.println(C[i]);
             System.out.println(D[i]);
             System.out.println("");
