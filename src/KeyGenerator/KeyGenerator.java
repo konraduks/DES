@@ -21,8 +21,7 @@ public class KeyGenerator {
         {63, 55, 47, 39, 31, 23, 15},
         {7, 62, 54, 46, 38, 30, 22},
         {14, 6, 61, 53, 45, 37, 29},
-        {21, 13, 5, 28, 20, 12, 4}
-    };
+        {21, 13, 5, 28, 20, 12, 4}};
     private static int PC2[][] = {
         {14, 17, 11, 24, 1, 5},
         {3, 28, 15, 6, 21, 10},
@@ -31,8 +30,7 @@ public class KeyGenerator {
         {41, 52, 31, 37, 47, 55},
         {30, 40, 51, 45, 33, 48},
         {44, 49, 39, 56, 34, 53},
-        {46, 42, 50, 36, 29, 32}
-    };
+        {46, 42, 50, 36, 29, 32}};
     private static int NumberOfShifts[] = {0, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
     String[] C = new String[17];
     String[] D = new String[17];
@@ -58,23 +56,24 @@ public class KeyGenerator {
             for (int y = 0; y < 7; y++) {
                 KPlus += tempBinary.charAt(PC1[i][y] - 1);
             }
-        }          
+        }
         C[0] = KPlus.substring(0, 28);
         D[0] = KPlus.substring(28, 56);
     }
 
-    public void Key(int NumberOfPermutation) {        
+    public String Key(int NumberOfPermutation) {
         generateC(NumberOfPermutation);
         generateD(NumberOfPermutation);
-        
-        String temp = C[NumberOfPermutation]+D[NumberOfPermutation];
+
+        String temp = C[NumberOfPermutation] + D[NumberOfPermutation];
         String result = "";
         for (int i = 0; i < 8; i++) {
             for (int y = 0; y < 6; y++) {
                 result += temp.charAt(PC2[i][y] - 1);
             }
         }
-        System.out.println(result);
+        //System.out.println(result);
+        return result;
     }
 
     private String generateC(int NumberOfPermutation) {
