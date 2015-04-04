@@ -11,9 +11,7 @@ import java.util.Arrays;
  *
  * @author Konrad
  */
-public class KeyGenerator {
-
-    String KPlus = "";
+public class KeyGenerator {    
 
     private static int PC1[] = {
         57, 49, 41, 33, 25, 17, 9,
@@ -41,7 +39,7 @@ public class KeyGenerator {
     byte[][] Key = new byte[17][];
 
     public KeyGenerator(String GivenKey) {
-        byte[] temp = new byte[8];//GivenKey.getBytes();
+        byte[] temp = new byte[8];
         for (int i = 0; i < 16; i++) {
             temp[i / 2] <<= 4;
             temp[i / 2] += Integer.parseInt(GivenKey.charAt(i) + "", 16);
@@ -82,15 +80,10 @@ public class KeyGenerator {
         byte[] temp = new byte[8];
         System.arraycopy(C[NumberOfPermutation], 0, temp, 0, 4);
         System.arraycopy(D[NumberOfPermutation], 0, temp, 4, 4);
-        byte[] result = new byte[8];
-        /*for (byte by : temp) {
-            String.format("%8s", Integer.toBinaryString(b2 & 0xFF)).replace(' ', '0');
-            System.out.print(String.format("%7s", Integer.toBinaryString(by & 0xFF)).replace(' ', '0') + " ");
-            System.out.print(Integer.toBinaryString(by).replace(' ', '0') + " ");
-        }*/
+        byte[] result = new byte[8];        
         for (int i = 0; i < 48; i++) {
             result[i / 6] <<= 1;
-            result[i / 6] += ((temp[(PC2[i] - 1) / 7] >> (6 - ((PC2[i] - 1) % 7))) & 0x01);;//getByte(temp[(PC2[i] - 1) / 7], (PC2[i] - 1) % 7);
+            result[i / 6] += ((temp[(PC2[i] - 1) / 7] >> (6 - ((PC2[i] - 1) % 7))) & 0x01);//getByte(temp[(PC2[i] - 1) / 7], (PC2[i] - 1) % 7);
         }
         Key[NumberOfPermutation] = result;
         return result;
@@ -113,8 +106,7 @@ public class KeyGenerator {
     private byte[] Shifts(byte[] array, int offset) {
         byte[] temp = new byte[4];
         for (int i = 3; i >= 0; i--) {
-            temp[i] = (byte) (array[i] << offset);
-            //temp[i] += array[(i + 1) % 4] & (offset*2-1);
+            temp[i] = (byte) (array[i] << offset);            
             temp[i] += ((array[(i + 1) % 4] >> (7 - offset)) & (offset * 2 - 1));
             temp[i] &= 0x7f; //aby najstarszy bit zawsze był 0 - używamy tylko 7 bit 
         }

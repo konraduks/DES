@@ -3,20 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Encryption;
+package Engine;
 
 import KeyGenerator.KeyGenerator;
-import des.ASCIItoBIN;
-import java.util.Arrays;
+import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Konrad
  */
-public class Encoding {
+public class DESEngine {
 
-    ASCIItoBIN atb;
-    //String[] L, R;
     KeyGenerator KeyG;
     byte[][] Left, Right, Keys;
 
@@ -30,7 +29,7 @@ public class Encoding {
                 61, 53, 45, 37, 29, 21, 13, 5,
                 63, 55, 47, 39, 31, 23, 15, 7};
 
-    public Encoding(KeyGenerator key) {
+    public DESEngine(KeyGenerator key) {
         KeyG = key;
         Left = new byte[17][];
         Right = new byte[17][];
@@ -39,56 +38,82 @@ public class Encoding {
             Keys[i] = KeyG.getKey(i);
         }
     }
+    
+    public DESEngine(String key) {
+        KeyG = new KeyGenerator(key);
+        Left = new byte[17][];
+        Right = new byte[17][];
+        Keys = new byte[17][];
+        for (int i = 1; i <= 16; i++) {
+            Keys[i] = KeyG.getKey(i);
+        }
+    }
 
-    public void Encode(String message) {
+    public String Encode(String message) {
         byte[] msg = message.getBytes();
         Splitting(InitialPermutation(msg));
 
         for (int i = 1; i <= 16; i++) {
-            //System.out.println("i: " + i);            
             Right[i] = XOR(Left[i - 1], Ppermutation(SboxTransformation(XORwithSubkey(Epermutation(i), i))));
             Left[i] = Right[i - 1];
-            //System.out.println("Left: " + Left[i].length);
         }
-        /*System.out.println("");
-        for(byte b: Right[16]){
-            System.out.print(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0') + " "); 
-        }
-        System.out.println("");
-        for(byte b: Left[16]){
-            System.out.print(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0') + " "); 
-        }
-        System.out.println("");*/
-        for(int i =0; i < 4; i++){
-            msg[i%4] = Right[16][i*2];
-            msg[i%4] <<= 4;
-            msg[i%4] += Right[16][i*2+1] ;
-            msg[i+4] = Left[16][i*2];
-            msg[i+4] <<= 4;
-            msg[i+4] += Left[16][i*2+1] ;
-        }
-        FinalPermutation(msg);
-        //byte[] temp = new byte[8];
-        //temp[0] = (byte) (Right[16][0] << 4);
-        //temp[0] = 
-        //FinalPermutation(Right[16]+Left[16]);
-        /*R[i] = XOR(L[i - 1], Ppermutation(SboxTransformation(XORwithSubkey(Epermutation(i), i))));
-         L[i] = R[i - 1];
-         //Ppermuatation(SboxTransformation(XORwithSubkey(Epermutation(i), i)));
-         }
-         FinalPermutation(R[16] + L[16]);*/
-        //System.out.println(FinalPermutation(R[16]+L[16]));
+        for (int i = 0; i < 4; i++) {
+            msg[i % 4] = Right[16][i * 2];
+            msg[i % 4] <<= 4;
+            msg[i % 4] += Right[16][i * 2 + 1];
+            msg[i + 4] = Left[16][i * 2];
+            msg[i + 4] <<= 4;
+            msg[i + 4] += Left[16][i * 2 + 1];
+        }        
+        return bytesToHex(FinalPermutation(msg));
     }
 
-    public byte[] InitialPermutation(byte[] message) {
+    public String Decode(String message) { // format wejsciowy: 16 znakow hexadecymalnych
+        byte[] msg = new byte[8];
+        for (int i = 0; i < 16; i += 2) {
+            msg[i / 2] = (byte) ((Character.digit(message.charAt(i), 16) << 4)
+                    + Character.digit(message.charAt(i + 1), 16));
+        }
+        Splitting(InitialPermutation(msg));
+
+        for (int i = 1; i <= 16; i++) {
+            Right[i] = XOR(Left[i - 1], Ppermutation(SboxTransformation(XORwithSubkeyReverse(Epermutation(i), i))));
+            Left[i] = Right[i - 1];
+        }
+        for (int i = 0; i < 4; i++) {
+            msg[i % 4] = Right[16][i * 2];
+            msg[i % 4] <<= 4;
+            msg[i % 4] += Right[16][i * 2 + 1];
+            msg[i + 4] = Left[16][i * 2];
+            msg[i + 4] <<= 4;
+            msg[i + 4] += Left[16][i * 2 + 1];
+        }
+        String value = null;
+        try {            
+            value = new String(FinalPermutation(msg), "UTF-8");            
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(DESEngine.class.getName()).log(Level.SEVERE, null, ex);
+        }        
+        return value;
+    }
+
+    final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
+    private String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int i = 0; i < bytes.length; i++) {
+            int v = bytes[i] & 0xFF;
+            hexChars[i * 2] = hexArray[v >>> 4];
+            hexChars[i * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
+    private byte[] InitialPermutation(byte[] message) {
         byte[] msg = new byte[message.length];
         for (int i = 0; i < 64; i++) {
-            //System.out.println(message[(IP[i]-1)/8]);
-            //System.out.println((message[(IP[i] - 1) / 8] >> (7 - ((IP[i] - 1) % 8))) & 0x01);
             msg[i / 8] <<= 1;
-
             msg[i / 8] += ((message[(IP[i] - 1) / 8] >> (7 - ((IP[i] - 1) % 8))) & 0x01);
-            //msg[i / 8] += (byte) getByte(message[(IP[i] - 1) / 8], (IP[i] - 1) % 8);
         }
         return msg;
     }
@@ -98,7 +123,7 @@ public class Encoding {
         return temp;
     }
 
-    public void Splitting(byte[] binaryMessage) {
+    private void Splitting(byte[] binaryMessage) {
         Left[0] = new byte[8];
         Right[0] = new byte[8];
         for (int i = 0; i < 4; i++) {
@@ -106,9 +131,7 @@ public class Encoding {
             Left[0][i * 2 + 1] = (byte) (binaryMessage[i] & 0xf);
             Right[0][i * 2] = (byte) ((binaryMessage[i + 4] >> 4) & 0xf);
             Right[0][i * 2 + 1] = (byte) (binaryMessage[i + 4] & 0xf);
-        }        
-        //Left[0] = Arrays.copyOfRange(binaryMessage, 0, 4);
-        //Right[0] = Arrays.copyOfRange(binaryMessage, 4, 8);
+        }
     }
 
     private static int E[]
@@ -120,65 +143,38 @@ public class Encoding {
                 20, 21, 22, 23, 24, 25,
                 24, 25, 26, 27, 28, 29,
                 28, 29, 30, 31, 32, 1};
-    
-    private byte[] Epermutation(int level) {  
-        //byte[] tt = Right[0];
-        byte[] temp = new byte[8];        
-        for (int i = 0; i < 48; i++) {
-            temp[i / 6] <<= 1;            
-            temp[i / 6] += ((Right[level - 1][(E[i] - 1) / 4] >> (3 - ((E[i] - 1) % 4))) & 0x01);            
-        }        
-        return temp;
-    }
 
-    /*private byte[] Epermutation(int level) {  
-        //byte[] tt = Right[0];
-        byte[] temp = new byte[8];        
-        //System.out.println(Right[level-1][0]);
+    private byte[] Epermutation(int level) {
+        byte[] temp = new byte[8];
         for (int i = 0; i < 48; i++) {
             temp[i / 6] <<= 1;
-            //System.out.println(7 - ((E[i] - 1) % 8));
-            //System.out.println(((Right[level - 1][(E[i] - 1) / 8] >> (7 - ((E[i] - 1) % 8))) & 0x01));
-            //System.out.println(i + " Epermutation: " +((Right[level - 1][(E[i] -1) / 8] >> (7 - ((E[i] - 1) % 8))) /*& 0x01));
-            //temp [1 / 4] += ((msg[(P[i] - 1) / 4] >> (7 - ((P[i] - 1) % 4))) & 0x01); 
             temp[i / 6] += ((Right[level - 1][(E[i] - 1) / 4] >> (3 - ((E[i] - 1) % 4))) & 0x01);
-            //temp[i / 7] += getByte(Right[level - 1][(E[i] - 1) / 8], (E[i] - 1) % 8);
-            //for (int y = 0; y < 6; y++) {
-            //System.out.println("lol" +(E[i][y] - 1));
-            //E_R += R[level - 1].charAt(E[i][y] - 1);
-            //temp += message.charAt(IP[i][y] - 1);
-            //}
-        }        
+        }
         return temp;
-    }*/
+    }
 
     private byte[] XORwithSubkey(byte[] E_R, int level) {
         byte[] key = Keys[level];
         byte[] XOR = new byte[8];
-        //XOR = key ^ E_R;
-        //System.out.println("Key: " + key.length);
         for (int i = 0; i < 8; i++) {
             XOR[i] = (byte) (key[i] ^ E_R[i]);
-            //XOR += (key.charAt(i) == E_R.charAt(i)) ? 0 : 1;
-            //System.out.print(XOR[i]+" ");
-            //System.out.println(key[i]+" "+E_R[i]);
         }
-        /*for (byte by : XOR) {
-            //String.format("%8s", Integer.toBinaryString(b2 & 0xFF)).replace(' ', '0');
-            System.out.print(String.format("%6s", Integer.toBinaryString(by & 0xFF)).replace(' ', '0') + " ");
-            //System.out.print(Integer.toBinaryString(by).replace(' ', '0') + " ");
+        return XOR;
+    }
+    
+    private byte[] XORwithSubkeyReverse(byte[] E_R, int level) {
+        byte[] key = Keys[17-level];
+        byte[] XOR = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            XOR[i] = (byte) (key[i] ^ E_R[i]);
         }
-        System.out.println("");*/
         return XOR;
     }
 
     private byte[] XOR(byte[] b1, byte[] b2) {
-        //System.out.println(b1.length + " " + b2.length);
-        //System.out.println(b1.length+ " " + b2.length);
         for (int i = 0; i < 8; i++) {
             b2[i] = (byte) (b2[i] ^ b1[i]);
         }
-        //System.out.println("b2: "+b2.length);
         return b2;
     }
 
@@ -218,19 +214,11 @@ public class Encoding {
 
     private byte[] SboxTransformation(byte[] msg) {
         int row;
-        int column;        
+        int column;
         for (int i = 0; i < 8; i++) {
             row = ((msg[i] >> 4) & 0x02) + (msg[i] & 0x01);
-            //row += msg[i] & 0x01;
-            //row = msg[i] & 0x21;
-            //row = msg[i] & 0x20;
-            //row <<= 1;
-            //row = msg[i] & 0x01;
             column = (msg[i] >> 1) & 0xf;
-            //System.out.println(row +" " + column);
             msg[i] = (byte) SBOXES[row + i * 4][column];
-            //System.out.println("SBOX " + msg[i]);
-            //System.out.print(String.format("%4s", Integer.toBinaryString(msg[i] & 0xFF)).replace(' ', '0') + " ");
         }
         return msg;
 
@@ -246,24 +234,12 @@ public class Encoding {
         19, 13, 30, 6,
         22, 11, 4, 25};
 
-
     private byte[] Ppermutation(byte[] msg) {
         byte[] temp = new byte[8];
-        //String F_P = "";
         for (int i = 0; i < 32; i++) {
-            //for (int y = 0; y < 4; y++) {
-            //getByte(message[(IP[i] - 1) / 8], (IP[i] - 1) % 8);
-            //System.out.println(((P[i]-1) / 4) + " " + (P[i]-1 % 4));
-            temp[i / 4] <<= 1;            
+            temp[i / 4] <<= 1;
             temp[i / 4] += ((msg[(P[i] - 1) / 4] >> (3 - ((P[i] - 1) % 4))) & 0x01);
-            //temp[i / 4] += getByte(msg[(P[i] - 1) / 4], ((P[i] - 1) % 4));
-            //F_P += binaryMessage.charAt(P[i][y] - 1);
-            //}
         }
-        /*for (byte by : temp) {            
-            System.out.print(String.format("%4s", Integer.toBinaryString(by & 0xFF)).replace(' ', '0') + " ");            
-        }
-        System.out.println("");*/
         return temp;
     }
 
@@ -278,22 +254,12 @@ public class Encoding {
                 33, 1, 41, 9, 49, 17, 57, 25};
 
     private byte[] FinalPermutation(byte[] msg) {
-        //String FP = "";
-        //System.out.println(binaryMessage);
-        //System.out.println(binaryMessage.length());
         byte[] temp = new byte[8];
         for (int i = 0; i < 64; i++) {
-            //for (int y = 0; y < 8; y++) {
-            //getByte(message[(IP[i] - 1) / 8], (IP[i] - 1) % 8);
             temp[i / 8] <<= 1;
-            //FP += binaryMessage.charAt(IP1[i][y] - 1);
             temp[i / 8] += ((msg[(IP1[i] - 1) / 8] >> (7 - ((IP1[i] - 1) % 8))) & 0x01);
-            //}
-        }
-        /*for (byte by : temp) {            
-            System.out.print(String.format("%8s", Integer.toBinaryString(by & 0xFF)).replace(' ', '0') + " ");            
-        }
-        System.out.println("");*/
+        }        
         return temp;
+
     }
 }
