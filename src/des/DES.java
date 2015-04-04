@@ -212,11 +212,11 @@ public class DES extends JFrame implements ActionListener {
         if (event == console) {
             jSP1.setVisible(true);
             jSP2.setVisible(true);
-            System.out.println(flag);
+            //System.out.println(flag);
         } else if (event == file) {
             jSP1.setVisible(false);
             jSP2.setVisible(false);
-            System.out.println(flag);
+            //System.out.println(flag);
         }else if (event == code) {
             flag = 1;
         }else if (event == decode) {
