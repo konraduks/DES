@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  */
 public class DESEngine {
 
-    KeyGenerator KeyG;
+    //KeyGenerator KeyG;
     byte[][] Left, Right, Keys;
 
     private static int IP[]
@@ -29,25 +29,43 @@ public class DESEngine {
                 61, 53, 45, 37, 29, 21, 13, 5,
                 63, 55, 47, 39, 31, 23, 15, 7};
 
-    public DESEngine(KeyGenerator key) {
-        KeyG = key;
+    public DESEngine() {
         Left = new byte[17][];
         Right = new byte[17][];
         Keys = new byte[17][];
+    }
+
+    public DESEngine(KeyGenerator key) {
+        this();
+        //KeyGenerator KeyG = key;        
+        for (int i = 1; i <= 16; i++) {
+            Keys[i] = key.getKey(i);
+        }
+    }
+
+    public DESEngine(String key) {
+        this();
+        KeyGenerator KeyG = new KeyGenerator(key);        
         for (int i = 1; i <= 16; i++) {
             Keys[i] = KeyG.getKey(i);
         }
     }
     
-    public DESEngine(String key) {
-        KeyG = new KeyGenerator(key);
-        Left = new byte[17][];
-        Right = new byte[17][];
-        Keys = new byte[17][];
-        for (int i = 1; i <= 16; i++) {
-            Keys[i] = KeyG.getKey(i);
-        }
+    // propozycje:
+    /*public byte[] EncodeBytetoByte(byte [] message){
+        //return Encode(message);
+        return null;
     }
+    
+    public byte[] EncodeBytetoString(byte [] message){
+        //return bytesToHex(Encode(message));
+        return null;
+    }
+    
+    public String EncodeStringtoString(String message){
+        //return bytesToHex(Encode(message.getBytes()));
+        return null;
+    }*/
 
     public String Encode(String message) {
         byte[] msg = message.getBytes();
@@ -64,7 +82,7 @@ public class DESEngine {
             msg[i + 4] = Left[16][i * 2];
             msg[i + 4] <<= 4;
             msg[i + 4] += Left[16][i * 2 + 1];
-        }        
+        }
         return bytesToHex(FinalPermutation(msg));
     }
 
@@ -89,11 +107,11 @@ public class DESEngine {
             msg[i + 4] += Left[16][i * 2 + 1];
         }
         String value = null;
-        try {            
-            value = new String(FinalPermutation(msg), "UTF-8");            
+        try {
+            value = new String(FinalPermutation(msg), "UTF-8");
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(DESEngine.class.getName()).log(Level.SEVERE, null, ex);
-        }        
+        }
         return value;
     }
 
@@ -161,9 +179,9 @@ public class DESEngine {
         }
         return XOR;
     }
-    
+
     private byte[] XORwithSubkeyReverse(byte[] E_R, int level) {
-        byte[] key = Keys[17-level];
+        byte[] key = Keys[17 - level];
         byte[] XOR = new byte[8];
         for (int i = 0; i < 8; i++) {
             XOR[i] = (byte) (key[i] ^ E_R[i]);
@@ -258,7 +276,7 @@ public class DESEngine {
         for (int i = 0; i < 64; i++) {
             temp[i / 8] <<= 1;
             temp[i / 8] += ((msg[(IP1[i] - 1) / 8] >> (7 - ((IP1[i] - 1) % 8))) & 0x01);
-        }        
+        }
         return temp;
 
     }

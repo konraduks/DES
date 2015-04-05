@@ -124,21 +124,33 @@ public class DES extends JFrame implements ActionListener {
         //ASCIItoBIN asc = new ASCIItoBIN();
         //System.out.println(asc.ASCIItoBIN("X"));
 
-        String key = "3b3898371520f75e";
+        /*String key = "3b3898371520f75e";
         long t1, t2;
+        
+        t1 = System.currentTimeMillis();
+        DESQueue dq = new DESQueue();
+        dq.Stream(key);
+        for (int i = 0; i < 40000; i++) {
+          dq.EncodeFromFile("ABCDEFGH");
+        }
+        t2 = System.currentTimeMillis();
+        System.out.println(t2 - t1);
+        
 
         t1 = System.currentTimeMillis();
         KeyGenerator kgba = new KeyGenerator(key);
         DESEngine eba = new DESEngine(kgba);
-        //for (int i = 0; i < 40000; i++) {
-        //  eba.Encode("ABCDEFGH");
-        //}
-        System.out.println(eba.Encode("ABCDEFGH"));
-        System.out.println(eba.Decode("58608465B4472AB1"));
+                
+        for (int i = 0; i < 40000; i++) {
+          eba.Encode("ABCDEFGH");
+        }
+        //System.out.println(eba.Encode("ABCDEFGH"));
+        //System.out.println(eba.Decode("58608465B4472AB1"));
         t2 = System.currentTimeMillis();
-        //System.out.println(t2 - t1);
+        System.out.println(t2 - t1);*/
+        
 
-        DataInputStream read = new DataInputStream(new FileInputStream("test.bin"));
+        //DataInputStream read = new DataInputStream(new FileInputStream("test.bin"));
         /* System.out.println(read.available());
          System.out.println(read.read() + " " + read.read() + read.read() + read.read() + read.read() + read.read() + read.read() + read.read());
          System.out.println(read.read() + " " + read.read() + read.read() + read.read() + read.read() + read.read() + read.read() + read.read());

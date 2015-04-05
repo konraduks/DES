@@ -41,8 +41,8 @@ public class KeyGenerator {
     public KeyGenerator(String GivenKey) {
         byte[] temp = new byte[8];
         for (int i = 0; i < 16; i++) {
-            temp[i / 2] <<= 4;
-            temp[i / 2] += Integer.parseInt(GivenKey.charAt(i) + "", 16);
+            temp[i / 2] <<= 4;            
+            temp[i / 2] += Integer.parseInt(GivenKey.charAt(i) + "", 16);            
         }
         Splitting(PC1Permutation(temp));
     }

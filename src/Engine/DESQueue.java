@@ -42,12 +42,30 @@ public class DESQueue {
         return tempStr;
     }
 
-    public String EncodeFromFile(String msg) {
-        return null;
+    public void Stream(String key) {  // metoda I dla pliku ZAWSZE!!!
+        des = new DESEngine(key);
     }
 
-    public String DecodeFromFile(String msg) {
-        return null;
+    public String EncodeFromFile(String msg) { // kodowanie pliku po 8 bajtow
+        //tempStr = des.Encode(msg);
+        return des.Encode(msg);
+    }
+    
+    public String EncodeFromFileLastBlock(String msg){ // ostatni blok, sprawdzenie czy potrzebny padding
+        if(msg.length() == 8){
+            return des.Encode(msg);
+        }
+        padding(tempStr = msg, 8 - msg.length());
+        return tempStr;
+    }
+
+    public String DecodeFromFile(String msg) { // dekodowanie pliku po 8 bajtow
+        return des.Decode(msg);
+    }
+    
+    public String DecodeFromFileLastBlock(String msg){ // dekodowanie ostatniego bloku, sprawdzenie czy wystepuje padding
+        paddingDelete(tempStr = msg);
+        return tempStr;
     }
 
     private void padding(String msg, int offset) { //PKCS5
@@ -61,7 +79,7 @@ public class DESQueue {
     private void paddingDelete(String msg) { //PKCS5
         //if (msg.charAt(msg.length() - 1) > 9) {
         if (msg.charAt(msg.length() - 1) > 57) {
-            System.out.println("lol");
+            //System.out.println("lol");
             return;
         }
         int possibleOffset = Integer.parseInt(msg.charAt(msg.length() - 1) + "");
