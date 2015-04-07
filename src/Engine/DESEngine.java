@@ -45,30 +45,67 @@ public class DESEngine {
 
     public DESEngine(String key) {
         this();
-        KeyGenerator KeyG = new KeyGenerator(key);        
+        KeyGenerator KeyG = new KeyGenerator(key);
         for (int i = 1; i <= 16; i++) {
             Keys[i] = KeyG.getKey(i);
         }
     }
-    
-    // propozycje:
-    /*public byte[] EncodeBytetoByte(byte [] message){
-        //return Encode(message);
-        return null;
-    }
-    
-    public byte[] EncodeBytetoString(byte [] message){
-        //return bytesToHex(Encode(message));
-        return null;
-    }
-    
-    public String EncodeStringtoString(String message){
-        //return bytesToHex(Encode(message.getBytes()));
-        return null;
-    }*/
 
-    public String Encode(String message) {
+    public byte[] EncodeBytetoByte(byte[] message) {
+        return bytesToHexBin(Encode(message));
+    }
+
+    public String EncodeBytetoString(byte[] message) {
+        return bytesToHex(Encode(message));
+    }
+
+    public String EncodeStringtoString(String message) {
         byte[] msg = message.getBytes();
+        return bytesToHex(Encode(msg));
+    }
+
+    public byte[] DecodeBytetoByte(byte[] message) { //format wejsciowy 16 znakow, format dla decode 8 znakow
+        byte[] msg = new byte[8];        
+        for (int i = 0; i < 16; i += 2) {
+            //msg[i / 2] = (byte) ((Character.digit(message.charAt(i), 16) << 4)
+            //      + Character.digit(message.charAt(i + 1), 16));
+            msg[i / 2] = (byte) ((Character.digit(message[i], 16) << 4) + Character.digit(message[i + 1], 16));
+        }
+        /*System.out.println("");
+        for(byte b: msg){
+         System.out.print(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0')+" ");
+         }
+        System.out.println("");*/        
+        return Decode(msg);
+    }
+
+    public String DecodeBytetoString(byte[] message) { //format wejsciowy 16 znakow
+        byte[] msg = new byte[8];
+        for (int i = 0; i < 16; i += 2) {
+            //msg[i / 2] = (byte) ((Character.digit(message.charAt(i), 16) << 4)
+            //      + Character.digit(message.charAt(i + 1), 16));
+            msg[i / 2] = (byte) ((message[i] << 4) + message[i + 1]);
+        }
+        return bytesToHex(Decode(msg));
+    }
+
+    public String DecodeStringtoString(String message) { // format wejsciowy 16 znakow
+        byte[] msg = new byte[8];
+        for (int i = 0; i < 16; i += 2) {
+            msg[i / 2] = (byte) ((Character.digit(message.charAt(i), 16) << 4)
+                    + Character.digit(message.charAt(i + 1), 16));
+        }
+        //return bytesToHex(Decode(msg)); 
+        String value = null;
+        try {
+            value = new String(Decode(msg), "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(DESEngine.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return value;
+    }
+
+    private byte[] Encode(byte[] msg) { //format wejsciowy 8 znakow
         Splitting(InitialPermutation(msg));
 
         for (int i = 1; i <= 16; i++) {
@@ -83,15 +120,16 @@ public class DESEngine {
             msg[i + 4] <<= 4;
             msg[i + 4] += Left[16][i * 2 + 1];
         }
-        return bytesToHex(FinalPermutation(msg));
+        //return bytesToHex(FinalPermutation(msg));
+        return FinalPermutation(msg);
     }
 
-    public String Decode(String message) { // format wejsciowy: 16 znakow hexadecymalnych
-        byte[] msg = new byte[8];
-        for (int i = 0; i < 16; i += 2) {
-            msg[i / 2] = (byte) ((Character.digit(message.charAt(i), 16) << 4)
-                    + Character.digit(message.charAt(i + 1), 16));
-        }
+    private byte[] Decode(byte[] msg) { // format wejsciowy: 8 znakow
+        //byte[] msg = new byte[8];
+        /*for (int i = 0; i < 16; i += 2) {
+         msg[i / 2] = (byte) ((Character.digit(message.charAt(i), 16) << 4)
+         + Character.digit(message.charAt(i + 1), 16));
+         }*/
         Splitting(InitialPermutation(msg));
 
         for (int i = 1; i <= 16; i++) {
@@ -106,16 +144,27 @@ public class DESEngine {
             msg[i + 4] <<= 4;
             msg[i + 4] += Left[16][i * 2 + 1];
         }
-        String value = null;
-        try {
-            value = new String(FinalPermutation(msg), "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(DESEngine.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return value;
+        return FinalPermutation(msg);
+        /*String value = null;
+         try {
+         value = new String(FinalPermutation(msg), "UTF-8");
+         } catch (UnsupportedEncodingException ex) {
+         Logger.getLogger(DESEngine.class.getName()).log(Level.SEVERE, null, ex);
+         }
+         return value;*/
     }
 
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
+    private byte[] bytesToHexBin(byte[] bytes) {
+        byte[] hexChars = new byte[bytes.length * 2];
+        for (int i = 0; i < bytes.length; i++) {
+            int v = bytes[i] & 0xFF;
+            hexChars[i * 2] = (byte) hexArray[v >>> 4];
+            hexChars[i * 2 + 1] = (byte) hexArray[v & 0x0F];
+        }
+        return hexChars;
+    }
 
     private String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];

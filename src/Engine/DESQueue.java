@@ -5,6 +5,8 @@
  */
 package Engine;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Konrad
@@ -24,7 +26,7 @@ public class DESQueue {
         tempInt = msg.length() - (msg.length() % 8);
         for (int i = 0; i < tempInt; i += 8) {
             //System.out.println(tempInt);
-            tempStr += des.Encode(msg.substring(i, i + 8));
+            tempStr += des.EncodeStringtoString(msg.substring(i, i + 8));
         }
         if ((tempInt = msg.length() % 8) != 0) {
             padding(msg.substring(msg.length() - tempInt, msg.length()), 8 - tempInt);
@@ -36,7 +38,7 @@ public class DESQueue {
         des = new DESEngine(key);
         tempInt = msg.length() /*- (msg.length() % 8)*/;
         for (int i = 0; i < tempInt; i += 16) {
-            tempStr += des.Decode(msg.substring(i, i + 16));
+            tempStr += des.DecodeStringtoString(msg.substring(i, i + 16));
         }
         paddingDelete(tempStr.substring(tempInt / 2 - 8, tempInt / 2));
         return tempStr;
@@ -46,26 +48,27 @@ public class DESQueue {
         des = new DESEngine(key);
     }
 
-    public String EncodeFromFile(String msg) { // kodowanie pliku po 8 bajtow
+    public byte[] EncodeFromFile(byte[] msg) { // kodowanie pliku po 8 bajtow
         //tempStr = des.Encode(msg);
-        return des.Encode(msg);
-    }
-    
-    public String EncodeFromFileLastBlock(String msg){ // ostatni blok, sprawdzenie czy potrzebny padding
-        if(msg.length() == 8){
-            return des.Encode(msg);
-        }
-        padding(tempStr = msg, 8 - msg.length());
-        return tempStr;
+        return des.EncodeBytetoByte(msg);
     }
 
-    public String DecodeFromFile(String msg) { // dekodowanie pliku po 8 bajtow
-        return des.Decode(msg);
+    public byte[] EncodeFromFileLastBlock(byte[] msg) { // ostatni blok, sprawdzenie czy potrzebny padding
+        /*if (msg.length == 8) {
+            return des.EncodeBytetoByte(msg);
+        }*/
+        //byte[] tempByte;
+        //padding(tempByte = msg, 8 - msg.length);
+        return des.EncodeBytetoByte(padding(msg, 8 - msg.length));
     }
-    
-    public String DecodeFromFileLastBlock(String msg){ // dekodowanie ostatniego bloku, sprawdzenie czy wystepuje padding
-        paddingDelete(tempStr = msg);
-        return tempStr;
+
+    public byte[] DecodeFromFile(byte[] msg) { // dekodowanie pliku po 8 bajtow
+        return des.DecodeBytetoByte(msg);
+    }
+
+    public byte[] DecodeFromFileLastBlock(byte[] msg) { // dekodowanie ostatniego bloku, sprawdzenie czy wystepuje padding
+        //paddingDelete(tempStr = msg);
+        return paddingDelete(des.DecodeBytetoByte(msg));
     }
 
     private void padding(String msg, int offset) { //PKCS5
@@ -73,7 +76,18 @@ public class DESQueue {
         for (int i = 0; i < offset; i++) {
             temp += offset + "";
         }
-        tempStr += des.Encode(msg + temp);
+        tempStr += des.EncodeStringtoString(msg + temp);
+    }
+
+    private byte[] padding(byte[] msg, int offset) {
+        //byte[] temp = new byte[8];
+        //temp = msg;
+        byte [] temp = Arrays.copyOf(msg, 8);
+        System.out.println(temp.length);
+        for (int i = 0; i < offset; i++) {
+            temp[7 - i] = (byte) (48 + offset);
+        }
+        return temp;
     }
 
     private void paddingDelete(String msg) { //PKCS5
@@ -83,12 +97,29 @@ public class DESQueue {
             return;
         }
         int possibleOffset = Integer.parseInt(msg.charAt(msg.length() - 1) + "");
+        //System.err.println(possibleOffset);
         for (int i = 0; i < possibleOffset; i++) {
-            if (Integer.parseInt(msg.charAt(msg.length() - 1) + "") != possibleOffset) {
+            try {
+                if (Integer.parseInt(msg.charAt(msg.length() - 1 - i) + "") != possibleOffset) {
+                    return;
+                }
+            } catch (Exception e) {
                 return;
             }
         }
         tempStr = tempStr.substring(0, tempStr.length() - possibleOffset);
+    }
 
+    private byte[] paddingDelete(byte[] msg) {
+        if (msg[7] > 57) {            
+            return msg;
+        }
+        int possibleOffset = msg[7];        
+        for (int i = 7; i >= (8 - (possibleOffset - 48)); i--) {
+            if(msg[i] != possibleOffset){                
+                return msg;
+            }
+        }        
+        return Arrays.copyOf(msg, 8-(possibleOffset - 48));
     }
 }
